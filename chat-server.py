@@ -17,8 +17,13 @@ def server():
 def new_client(client_connection, client_address,client_list):
     while True:
         message = client_connection.recv(1024)#recive la conexion
-        broadcast(client_list,message,client_connection)
-        print "llego mensage"
+        if message =='':
+            client_list.close()
+            print "Se cerro la conexion"
+        else:
+            broadcast(client_list,message,client_connection)
+            print message
+            print "llego mensage"
 
 
 def broadcast(client_list,message, actual_client):
