@@ -1,0 +1,80 @@
+﻿* Explicar la forma en que se utilizan las reglas para facilitar la comunicación, explicar la función de los protocolos y de los organismos de estandarización para facilitar la interoperabilidad en las comunicaciones de red.
+* Un emisor y un receptor identificados (cada usuario se debe identificar).
+* Método de comunicación acordado (teléfono).Requisitos de confirmación o acuse de recibo.
+
+
+Formato y Forma del Mensaje
+* Un identificador del destinatario.
+* El contenido del mensaje.
+* Un identificador del emisor.
+la cantidad mínimo de caracteres en un mensaje a enviar será de (1) y máximo será (65536)
+los archivos (imágenes, documentos,audio) podrán tener un tamaño máximo de  Mbytes
+Segmentar los mensajes
+Cada segmento se encapsula en una trama separada con la información de la dirección y se envía a través de la red. 
+En el host receptor, los mensajes se desencapsula y se vuelven a unir para su procesamiento e interpretación.
+se trabajara con código ascii (los mensajes podrán contener cualquiera de los caracteres permitidos en ascii)
+
+
+
+
+
+
+Basado en normas RFC
+Los requisitos relacionados con MENSAJES INSTANTÁNEO  RFC 2779
+
+  Cuando un usuario A envía un mensaje M instantáneo a otro usuario B,
+
+         A debe recibir confirmación de la falta de entrega.
+
+         Si M es entregado, B debe recibir el mensaje de una sola vez. (mensaje debe llegar                             entero, no segmentado) 
+
+        El protocolo deberá proporcionar los medios para verificar  a B que A envía el
+         mensaje. (el mensaje debe llevar la identificación de quien lo envía )
+        
+B debe ser capaz de ver el mensaje M (mensaje debe llegar legible tal cual fue enviado, no debe contener caracteres u otras cosas que no hayan sido enviadas por el remitente (A) ni spam)
+B debe ser capaz de responder al mensaje instantáneo a través de otro
+mensaje.(  que el destinatario pueda responder cuando le plazca el mensaje ) 
+
+
+
+
+
+
+
+
+
+otra cosa
+ Métodos SIP
+Las peticiones SIP son caracterizadas por la línea inicial del mensaje, llamada Request-Line, que contiene el nombre del método, el identificador del destinatario de la petición (Request-URI) y la versión del protocolo SIP. Existen seis métodos básicos SIP (definidos en RFC 254) que describen las peticiones de los clientes:
+
+
+- INVITE: Permite invitar un usuario o servicio para participar en una sesión o para modificar parámetros en una sesión ya existente.
+- ACK: Confirma el establecimiento de una sesión.
+- OPTION: Solicita información sobre las capacidades de un servidor.
+- BYE: Indica la terminación de una sesión.
+- CANCEL: Cancela una petición pendiente.
+- REGISTER: Registrar al User Agent.
+
+
+
+
+basado en el RFC 3265
+el tiempo de caducidad por defecto para los registros (sesiones establecidas ) dentro de este paquete será de 3600 segundos, si no hay intervención del usuario.
+
+
+
+
+
+
+https://tools.ietf.org/html/rfc3856
+https://tools.ietf.org/html/rfc2778
+https://www.ietf.org/rfc/rfc2779.txt
+https://datatracker.ietf.org/doc/search/?name=message&sort=&rfcs=on&activedrafts=on
+https://tools.ietf.org/html/rfc3261
+http://www.voipforo.com/SIP/SIPmensajes.php
+https://tools.ietf.org/html/rfc4452
+https://www.ietf.org/rfc/rfc2396.txt
+http://www.voip-info.org/wiki/view/SIP+URI
+http://www.3cx.com/pbx/sip-uri/
+https://tools.ietf.org/html/rfc3265#section-3.1
+https://tools.ietf.org/html/rfc3856#section-6.4
