@@ -24,5 +24,12 @@ def client_listening(clientSocket, ):
     while True:
         data, server = clientSocket.recvfrom(1024)
         print (data)
+        if data=='';
+            printf ("Reinicie el servicio, se ha caido la conexion")
+            else:
+                try:
+                    clientSocket.send(u"\u2713")
+                    except:
+                        continue
 
 client()
