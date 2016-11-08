@@ -30,6 +30,7 @@ def client_listening(clientSocket, ):
                 try:
                     clientSocket.send(u"\u2713")
                     except:
+                        
                         continue
 
 client()
