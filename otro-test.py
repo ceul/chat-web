@@ -29,14 +29,17 @@ Builder.load_string("""
                 text:'Usuario'
             TextInput:
                 id:user
+                multiline:False
             Label:
                 text:'Contrasena'
             TextInput:
-                id:pass
+                id:passw
+                multiline:False
+                password:True
         BoxLayout:
             Button:
                 text: 'Iniciar Sesion'
-                on_press: root.manager.current = 'chat'
+                on_press: root.printUser(user.text,passw.text)#aqui se envia la informacion que hay en los text inputs para ser procesadas
                 size_hint: (0.1, 0.3)
             Button:
                 text: 'Registrarse'
@@ -50,7 +53,7 @@ Builder.load_string("""
         Button:
             text: 'Desconectar'
             size_hint: (0.2, 0.05)
-            on_press: root.current = 'login'
+            on_press: root.manager.current = 'login'
         ScrollView:
             ChatLabel:
                 id: chat_logs
@@ -81,9 +84,12 @@ Builder.load_string("""
                 on_press: root.manager.current = 'login'
                 size_hint: (0.08, 0.3)
 """)
-
+#on_press: root.manager.current = 'chat'
 # Declare both screens
 class LoginScreen(Screen):
+    def printUser(self,user,password):
+        print 'entro'
+        print user+' '+password
     pass
 
 class ChatScreen(Screen):
