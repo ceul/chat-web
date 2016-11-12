@@ -88,8 +88,10 @@ Builder.load_string("""
 # Declare both screens
 class LoginScreen(Screen):
     def printUser(self,user,password):
+        #Aqui se debe ingresar el codigo de comprobacion del usuario (si existe o no en la base de datos)
         print 'entro'
         print user+' '+password
+        self.manager.current = 'chat'
     pass
 
 class ChatScreen(Screen):
@@ -97,7 +99,6 @@ class ChatScreen(Screen):
 
 class RegisterScreen(Screen):
     pass
-
 
 # Create the screen manager
 sm = ScreenManager()
