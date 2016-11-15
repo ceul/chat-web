@@ -8,7 +8,10 @@ from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from random import SystemRandom
 import MySQLdb
+from socket import *
 from kivy.uix.progressbar import ProgressBar
+import threading
+
 
 Builder.load_string("""
 <ChatLabel@Label>:
@@ -35,7 +38,7 @@ Builder.load_string("""
             size: self.size
     FloatLayout:
         Image:
-            source: '/home/julian/Escritorio/app/icono.png'
+            source: '/home/ceul/app/chat-web-master/icono.png'
             size: self.texture_size
             height: '55dp'
             size_hint_y: None
@@ -93,7 +96,7 @@ Builder.load_string("""
             size: self.size
     FloatLayout:
         Image:
-            source: '/home/julian/Escritorio/app/icono.png'
+            source: '/home/ceul/app/chat-web-master/icono.png'
             size: self.texture_size
             height: '55dp'
             size_hint_y: None
@@ -134,6 +137,7 @@ Builder.load_string("""
 
 
 <ChatScreen>:
+    on_enter: root.recvMsg(chat_logs)
     BoxLayout:
         padding: 2
         orientation: 'vertical'
@@ -142,9 +146,10 @@ Builder.load_string("""
             size_hint: (0.2, 0.05)
             on_press: root.manager.current = 'login'
         ScrollView:
-            ChatLabel:
+            Label:
                 id: chat_logs
-                text: 'User says: foo'
+                color: (0,0,0,1)
+
         BoxLayout:
             height: 90
             orientation: 'horizontal'
@@ -155,7 +160,9 @@ Builder.load_string("""
             Button:
                 text: 'Enviar'
                 size_hint: (0.3, 1)
-                disabled: True
+                on_press: root.sendMsg(message.text,chat_logs,message)
+
+
 
 <RegisterScreen>:
     canvas.before:
@@ -166,7 +173,7 @@ Builder.load_string("""
             size: self.size
     FloatLayout:
         Image:
-            source: '/home/julian/Escritorio/app/icono.png'
+            source: '/home/ceul/app/chat-web-master/icono.png'
             size: self.texture_size
             height: '55dp'
             size_hint_y: None
@@ -203,7 +210,7 @@ class LoginScreen(Screen):
 
     def compdatabase(self,user,password):
 
-        bd = MySQLdb.connect("localhost", "root", "Agape102", "bd_chat")
+        bd = MySQLdb.connect("localhost", "root", "admin", "bd_chat")
 
         # Preparamos el cursor que nos va a ayudar a realizar las operaciones con la base de datos
         cursor = bd.cursor()
@@ -217,6 +224,7 @@ class LoginScreen(Screen):
         if rows_count > 0:
             resultado = cursor.fetchall()
             print "El usuario esta registrado"
+            conn.connect()
             self.manager.current = 'chat'
         else:
             print "El usuario no esta registrado"
@@ -227,7 +235,7 @@ class LoginChatScreen(Screen):
 
     def compdatabase1(self,user,password):
 
-        bd = MySQLdb.connect("localhost", "root", "Agape102", "bd_chat")
+        bd = MySQLdb.connect("localhost", "root", "admin", "bd_chat")
         # Preparamos el cursor que nos va a ayudar a realizar las operaciones con la base de datos
         cursor = bd.cursor()
 
@@ -240,6 +248,7 @@ class LoginChatScreen(Screen):
         if rows_count > 0:
             resultado = cursor.fetchall()
             print "El usuario esta registrado"
+            conn.connect()
             self.manager.current = 'chat'
         else:
             print "El usuario no esta registrado"
@@ -247,71 +256,62 @@ class LoginChatScreen(Screen):
     pass
 
 class ChatScreen(Screen):
+    def recvMsg(self,chat_logs):
+        conn.listener_1(chat_logs)
+
+    def sendMsg(self,msg,chat,message):
+        conn.send_msg(msg,chat,message)
     pass
 
-class RegisterScreen(Screen):
 
+
+class RegisterScreen(Screen):
     def IngresarUsuario(self,user):
         def database(user, p):
-            bd = MySQLdb.connect("localhost", "root", "Agape102", "bd_chat")
+            bd = MySQLdb.connect("localhost", "root", "admin", "bd_chat")
             # Preparamos el cursor que nos va a ayudar a realizar las operaciones con la base de datos
             cursor = bd.cursor()
-
             # Preparamos el query SQL para insertar un registro en la BD
             sql = 'INSERT INTO usuario (correo,contrasena) VALUES("%s","%s")' % (user, p)
-
             try:
                 cursor.execute(sql)
                 bd.commit()
                 print("\n Se inserto con exito")
-
             except:
                 print("Hubo un problema")
                 bd.rollback()
-
             bd.close()
-
         pass
         ##########  INICIO DATOS CORREO  #############
-
         # establecer conexion con el servidor de gmail
         mailserver = SMTP('smtp.gmail.com', 587)
         mailserver.ehlo()
         mailserver.starttls()
         mailserver.ehlo()
         mailserver.login("omgchat1.0@gmail.com", "ucatolica123")
-
         # construccion del mensaje
         mensaje = MIMEMultipart()
         mensaje['from'] = "omgchat1.0@gmail.com"
         mensaje['to'] = user
         mensaje['subject'] = "Confirmacion de cuenta OMGChat"
-
         longitud = 10
         valores = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
-
         cryptogen = SystemRandom()
         p = ""
-
         while longitud > 0:
             p = p + cryptogen.choice(valores)
             longitud = longitud - 1
-
         mensaje.attach(MIMEText("Saludos usuario, envio confirmacion de correo:\n Su contrasena es:" + p))
         database(user,p)
-
         # Enviar correo
         try:
             mailserver.sendmail(mensaje['from'], mensaje['to'], mensaje.as_string())
             print ("Envio correo")
         except:
             print("Error en envio del correo")
-
         # Cerrar conexion
         mailserver.close()
     pass
-
-
 
 # Create the screen manager
 sm = ScreenManager()
@@ -321,9 +321,33 @@ sm.add_widget(ChatScreen(name='chat'))
 sm.add_widget(RegisterScreen(name='register'))
 
 class OMGChatApp(App):
-
     def build(self):
         return sm
+    def connect(self):
+        self.clientSocket = socket(AF_INET, SOCK_STREAM)
+        self.clientSocket.setsockopt(SOL_SOCKET, SO_REUSEADDR, 1)
+        addr = ('', 3457)
+        self.clientSocket.connect(addr)
 
+    def send_msg(self,msg,chat_logs,message):
+        self.clientSocket.send('%s' % ( msg))
+        chat_logs.text += ('yo: %s\n' % ( msg))
+        message.text = ''
+
+    def listener_1(self,chat_logs):
+        listening=threading.Thread(target=self.listener, args=(chat_logs, ))
+        listening.start()
+
+    def listener(self,chat_logs):
+        while True:
+            data, server = self.clientSocket.recvfrom(1024)
+            print (data)
+            if data=='':
+                print ("Reinicie el servicio, se ha caido la conexion")
+            else:
+                print data
+                chat_logs.text += ('otro: %s\n' % ( data))
+
+conn=OMGChatApp()
 if __name__ == '__main__':
         OMGChatApp().run()
