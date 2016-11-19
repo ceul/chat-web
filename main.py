@@ -3,13 +3,7 @@ from kivy.lang import Builder
 from kivy.uix.screenmanager import ScreenManager, Screen
 from kivy.uix.scrollview import *
 from kivy.uix.anchorlayout import *
-from smtplib import SMTP
-from email.mime.text import MIMEText
-from email.mime.multipart import MIMEMultipart
-from random import SystemRandom
-import MySQLdb
 from socket import *
-from kivy.uix.progressbar import ProgressBar
 import threading
 
 
@@ -185,6 +179,7 @@ Builder.load_string("""
 
 class LoginScreen(Screen):
     def connect(self,user,password):
+        conn.connect()
         ans=conn.logindb(user,password)
         if ans=='1':
             self.manager.current='chat'
@@ -200,7 +195,7 @@ class ChatScreen(Screen):
 class FileScreen(Screen):
     def send(self, filename):
         print "selected: %s" % filename[0]
-        #conn.send_file(filename[0])
+        conn.send_file(filename[0])
 
 
 class RegisterScreen(Screen):
@@ -220,7 +215,7 @@ class OMGChatApp(App):
     def connect(self):
         self.clientSocket = socket(AF_INET, SOCK_STREAM)
         self.clientSocket.setsockopt(SOL_SOCKET, SO_REUSEADDR, 1)
-        addr = ('', 3457)
+        addr = ('192.168.0.26', 3457)
         self.clientSocket.connect(addr)
 
     def send_msg(self,msg,chat_logs,message):
@@ -233,24 +228,36 @@ class OMGChatApp(App):
 
     def registerdb(self,user):
         self.clientSocket.send('Register:\nUser:%s\n' % ( user))
+
     def logindb(self,user,password):
         self.clientSocket.send('Login:\nUser:%s\nPassw:%s\n' % ( user,password))
         data, server = self.clientSocket.recvfrom(1024)
-        if data=='ok':
+        if data=='Login ok':
             print 'entro'
             return '1'
-
     def send_file(self,path):
+        self.clientSocket.send('File:\nName:%s\n' % ( path))
+        sending_file=threading.Thread(target=self.send_file1, args=(path, ))
+        sending_file.start()
+
+    def send_file1(self,path):
+        self.clientSocket.send('threading')
+        CONEXION = ('192.168.0.26', 9001)
+        cliente = socket(AF_INET, SOCK_STREAM)
+        self.clientSocket.send('1')
+        cliente.setsockopt(SOL_SOCKET, SO_REUSEADDR, 1)
+        self.clientSocket.send('2')
+        cliente.connect(CONEXION)
+        self.clientSocket.send('conecto')
         with open(path, "rb") as archivo:
             buffer = archivo.read()
         while True:
             print "Enviando buffer"
-            self.clientSocket.send(str(len(buffer)))
-            print enviado
-            recibido = self.clientSocket.recv(10)
+            cliente.send(str(len(buffer)))
+            recibido = cliente.recv(10)
             if recibido == "OK":
                 for byte in buffer:
-                    self.clientSocket.send(byte)
+                    cliente.send(byte)
                 break
 
     def listener_1(self,chat_logs):

@@ -1,17 +1,16 @@
 [app]
 
 # (str) Title of your application
-title = Mi Hola mundo
+title = OMG Chat
 
 # (str) Package name
-package.name = myfirstapp
+package.name = omgchat
 
 # (str) Package domain (needed for android/ios packaging)
 package.domain = org.test
 
 # (str) Source code where the main.py live
-source.dir = /home/daniel/PycharmProjects/untitled/
-
+source.dir = /home/ceul/app/chat-web-master
 # (list) Source files to include (let empty to include all the files)
 source.include_exts = py,png,jpg,kv,atlas
 
@@ -36,7 +35,8 @@ version = 1.0
 
 # (list) Application requirements
 # comma seperated e.g. requirements = sqlite3,kivy
-requirements = kivy
+requirements = android,twisted,kivy
+
 
 # (str) Custom source folders for requirements
 # Sets custom source for any requirements with recipes
@@ -52,7 +52,7 @@ requirements = kivy
 #icon.filename = %(source.dir)s/data/icon.png
 
 # (str) Supported orientation (one of landscape, portrait or all)
-orientation = all
+orientation = portrait
 
 # (list) List of service to declare
 #services = NAME:ENTRYPOINT_TO_PY,NAME2:ENTRYPOINT2_TO_PY
@@ -69,10 +69,10 @@ orientation = all
 #
 
 # (bool) Indicate if the application should be fullscreen or not
-fullscreen = 1
+fullscreen = 0
 
 # (list) Permissions
-android.permissions = INTERNET,WAKE_LOCK, RECORD_AUDIO, READ_EXTERNAL_STORAGE, WRITE_EXTERNAL_STORAGE
+android.permissions = INTERNET,WAKE_LOCK, RECORD_AUDIO, READ_EXTERNAL_STORAGE, WRITE_EXTERNAL_STORAGE,CAMERA
 
 # (int) Android API to use
 #android.api = 19

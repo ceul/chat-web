@@ -5,7 +5,7 @@ from smtplib import SMTP
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from random import SystemRandom
-
+import os
 def server():
     client_list=[]
     host, port = '', 3457
@@ -18,6 +18,7 @@ def server():
         client_connection, client_address = listen_socket.accept() #acepta la conexion
         client_list.append(client_connection)
         thread.start_new_thread(new_client, (client_connection, client_address,client_list))
+        #thread.start_new_thread(recv_file, (client_connection, client_list))
 
 def new_client(client_connection, client_address,client_list):
     flag=False
@@ -44,6 +45,15 @@ def new_client(client_connection, client_address,client_list):
             pos2=(message.find('\n',pos1))
             user= message[pos1:pos2]
             IngresarUsuario(user)
+        elif (message.startswith('File:'))==True:
+            print 'entro'
+            print message
+            pos1=(message.find('Name:',6)+5)
+            pos2=(message.find('\n',pos1))
+            path= message[pos1:pos2]
+            head, name = os.path.split(path)
+            print name
+            thread.start_new_thread(recv_file, (name,))
         else:
             broadcast(client_list,message,client_connection)
             print message
@@ -67,7 +77,7 @@ def compdatabase(user,password):
     if rows_count > 0:
         resultado = cursor.fetchall()
         print "El usuario esta registrado"
-        return 'ok'
+        return 'Login ok'
     else:
         print "El usuario no esta registrado"
         return 'no'
@@ -118,5 +128,46 @@ def IngresarUsuario(user):
         print("Error en envio del correo")
     # Cerrar conexion
     mailserver.close()
+
+def recv_file(client_connection, client_list):
+    while True:
+        message = client_connection.recv(1024)#recibe la conexion
+        if (message.startswith('File:'))==True:
+            print 'entro'
+            print message
+            pos1=(message.find('Name:',6)+5)
+            pos2=(message.find('\n',pos1))
+            path= message[pos1:pos2]
+            head, name = os.path.split(path)
+            CONEXION = ('', 9001)
+            servidor = socket(AF_INET, SOCK_STREAM)
+            servidor.setsockopt(SOL_SOCKET, SO_REUSEADDR, 1)
+            servidor.bind(CONEXION)
+            servidor.listen(5)
+            print "Escuchando {0} en {1}".format(*CONEXION)
+            thread.start_new_thread(recv_file1, (servidor, name))
+
+def recv_file1(servidor,name):
+    sck, addr = servidor.accept()
+    print "Conectado a: {0}:{1}".format(*addr)
+    while True:
+        recibido = sck.recv(1024).strip()
+        if recibido:
+            print "Recibido:", recibido
+        if recibido.isdigit():
+            sck.send("OK")
+            buffer = 0
+            with open(name, "wb") as archivo:
+                while (buffer <= int(recibido)):
+                    data = sck.recv(1)
+                    if not len(data):
+                        break
+                    archivo.write(data)
+                    buffer += 1
+                if buffer == int(recibido):
+                    print "Archivo descargado con exito"
+                else:
+                    print "Ocurrio un error/Archivo incompleto"
+            break
 
 server()
