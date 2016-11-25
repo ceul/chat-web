@@ -3,10 +3,12 @@ from kivy.lang import Builder
 from kivy.uix.screenmanager import ScreenManager, Screen
 from kivy.uix.scrollview import *
 from kivy.uix.anchorlayout import *
+from kivy.uix.image import *
 from socket import *
 import threading
-import thread
 import os
+from plyer import camera
+import time
 
 Builder.load_string("""
 <ChatLabel@Label>:
@@ -42,9 +44,8 @@ Builder.load_string("""
         FloatLayout:
             orientation: 'vertical'
             Label:
-                text: 'Bienvenidos a OMGChat'
-                pos_hint: {'center_x': .5, 'center_y': .85}
-                height: '50dp'
+                text:'Bienvenido a OMGchat'
+                pos_hint: {'center_x': .5, 'center_y': .9}
                 color: (0,0,0,1)
             Label:
                 text:'Usuario'
@@ -91,6 +92,10 @@ Builder.load_string("""
         Button:
             text:'Enviar Archivo'
             on_press: root.manager.current='file'
+            size_hint: (0.4, 0.06)
+        Button:
+            text:'Camara'
+            on_press: root.camera()
             size_hint: (0.4, 0.06)
         ScrollView:
             ChatLabel:
@@ -186,12 +191,14 @@ Builder.load_string("""
 
 class LoginScreen(Screen):
     def connect(self,user,password):
-        conn.connect()
+        #conn.connect()
         ans=conn.logindb(user,password)
         if ans=='1':
             self.manager.current='chat'
 
 class ChatScreen(Screen):
+    def camera(self):
+        conn.cam()
     def recvMsg(self,chat_logs_o):
         conn.listener_1(chat_logs_o)
 
@@ -224,13 +231,29 @@ class OMGChatApp(App):
     def connect(self):
         self.clientSocket = socket(AF_INET, SOCK_STREAM)
         self.clientSocket.setsockopt(SOL_SOCKET, SO_REUSEADDR, 1)
-        addr = ('192.168.0.26', 3457)
+        addr = ('192.168.0.28', 3457)
         self.clientSocket.connect(addr)
         confile = ('', 9002)
         self.servidor = socket(AF_INET, SOCK_STREAM)
         self.servidor.setsockopt(SOL_SOCKET, SO_REUSEADDR, 1)
         self.servidor.bind(confile)
         self.servidor.listen(50)
+
+    def  cam(self):
+        path='/storage/emulated/0/OMGchat/'
+        date=time.strftime("%d%m%y")
+        #print date
+        imgname='IMG-'+date+'-OMG.jpg'
+        cpath=path+imgname
+        #print '\n'+cpath
+        #self.chat_log.text+='/storage/emulated/0/OMGchat/img.jpg'
+        camera.take_picture(cpath,self.done)#self.done(path)) #Take a picture and save at this location. After will call done() callback
+
+    def done(self,path):
+        self.chat_log.text+=path
+        self.send_file(path)
+        self.root.current='chat'
+        
 
     def send_msg(self,msg,chat_logs,message):
         if msg=='':
@@ -266,12 +289,13 @@ class OMGChatApp(App):
     def send_file(self,path):
         head, name = os.path.split(path)
         self.clientSocket.send('File:\nName:%s\n' % ( name))
-        sending_file=threading.Thread(target=self.send_file1, args=(path, ))
+        self.chat_log.text+=('Enviando archivo: %s \n'% name)
+        sending_file=threading.Thread(target=self.send_file1, args=(path,name))
         sending_file.start()
 
-    def send_file1(self,path):
+    def send_file1(self,path,name):
         #self.clientSocket.send('threading')
-        CONEXION = ('192.168.0.26', 9001)
+        CONEXION = ('192.168.0.28', 9001)
         cliente = socket(AF_INET, SOCK_STREAM)
         #self.clientSocket.send('1')
         cliente.setsockopt(SOL_SOCKET, SO_REUSEADDR, 1)
@@ -287,6 +311,7 @@ class OMGChatApp(App):
             if recibido == "OK":
                 for byte in buffer:
                     cliente.send(byte)
+                self.chat_log.text+=('Termino de enviar archivo: %s \n'% name)
                 break
 
     def recv_file(self,name,chat_logs):
@@ -314,6 +339,7 @@ class OMGChatApp(App):
                 break
 
     def listener_1(self,chat_logs):
+        self.chat_log=chat_logs
         listening=threading.Thread(target=self.listener, args=(chat_logs, ))
         listening.start()
 
