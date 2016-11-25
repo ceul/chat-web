@@ -7,7 +7,7 @@ from kivy.uix.image import *
 from socket import *
 import threading
 import os
-from plyer import camera
+from plyer import *
 import time
 
 Builder.load_string("""
@@ -89,14 +89,22 @@ Builder.load_string("""
     BoxLayout:
         padding: 2
         orientation: 'vertical'
-        Button:
-            text:'Enviar Archivo'
-            on_press: root.manager.current='file'
-            size_hint: (0.4, 0.06)
-        Button:
-            text:'Camara'
-            on_press: root.camera()
-            size_hint: (0.4, 0.06)
+        BoxLayout:
+            height: 90
+            orientation: 'horizontal'
+            size_hint: (1, 0.05)
+            Button:
+                text:'Enviar Archivo'
+                on_press: root.manager.current='file'
+                size_hint: (1, 1)
+            Button:
+                text:'Foto'
+                on_press: root.cameraPic()
+                size_hint: (1, 1)
+            Button:
+                text:'Video'
+                on_press: root.cameraVid()
+                size_hint: (1, 1)
         ScrollView:
             ChatLabel:
                 id: chat_logs
@@ -197,8 +205,10 @@ class LoginScreen(Screen):
             self.manager.current='chat'
 
 class ChatScreen(Screen):
-    def camera(self):
-        conn.cam()
+    def cameraPic(self):
+        conn.camPic()
+    def cameraVid(self):
+        conn.camVid()
     def recvMsg(self,chat_logs_o):
         conn.listener_1(chat_logs_o)
 
@@ -239,21 +249,28 @@ class OMGChatApp(App):
         self.servidor.bind(confile)
         self.servidor.listen(50)
 
-    def  cam(self):
-        path='/storage/emulated/0/OMGchat/'
+    def  camPic(self):
+        path='/storage/emulated/0/OMGchat/OMGImages/'
         date=time.strftime("%d%m%y")
-        #print date
         imgname='IMG-'+date+'-OMG.jpg'
         cpath=path+imgname
-        #print '\n'+cpath
-        #self.chat_log.text+='/storage/emulated/0/OMGchat/img.jpg'
-        camera.take_picture(cpath,self.done)#self.done(path)) #Take a picture and save at this location. After will call done() callback
+        camera.take_picture(cpath,self.done)
 
     def done(self,path):
-        self.chat_log.text+=path
         self.send_file(path)
         self.root.current='chat'
-        
+
+    def  camVid(self):
+        path='/storage/emulated/0/OMGchat/OMGVideos/'
+        date=time.strftime("%d%m%y")
+        vidname='VID-'+date+'-OMG.mp4'
+        cpath=path+vidname
+        camera.take_video(cpath,self.done1)
+
+    def done1(self,path):
+        self.send_file(path)
+        self.root.current='chat'
+
 
     def send_msg(self,msg,chat_logs,message):
         if msg=='':
@@ -367,6 +384,11 @@ class OMGChatApp(App):
 
 nuevaruta = r'/storage/emulated/0/OMGchat'
 if not os.path.exists(nuevaruta): os.makedirs(nuevaruta)
+nuevaruta1 = r'/storage/emulated/0/OMGchat/OMGImages'
+if not os.path.exists(nuevaruta1): os.makedirs(nuevaruta1)
+nuevaruta2 = r'/storage/emulated/0/OMGchat/OMGVideos'
+if not os.path.exists(nuevaruta2): os.makedirs(nuevaruta2)
+
 conn=OMGChatApp()
 conn.connect()
 if __name__ == '__main__':
