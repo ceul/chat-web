@@ -5,7 +5,8 @@ from kivy.uix.scrollview import *
 from kivy.uix.anchorlayout import *
 from socket import *
 import threading
-
+import thread
+import os
 
 Builder.load_string("""
 <ChatLabel@Label>:
@@ -20,13 +21,15 @@ Builder.load_string("""
     valign: 'top'
     size_hint: (1, None)  # Step 2
     height: self.texture_size[1]  # Step 3
+
 <ScrollView>:
     canvas.before:
         Color:
-            rgb: 1, 1, 1
+            rgb: (0.5, 0.5, 0.5, 1.0)
         Rectangle:
             pos: self.pos
             size: self.size
+
 <LoginScreen>:
     canvas.before:
         Color:
@@ -35,19 +38,17 @@ Builder.load_string("""
             pos: self.pos
             size: self.size
     FloatLayout:
-        Image:
-            source: '/home/ceul/app/chat-web-master/icono.png'
-            size: self.texture_size
-            height: '55dp'
-            size_hint_y: None
-            pos_hint: {'center_x': .5, 'center_y': .8}
-    FloatLayout:
         orientation: 'vertical'
         FloatLayout:
             orientation: 'vertical'
             Label:
+                text: 'Bienvenidos a OMGChat'
+                pos_hint: {'center_x': .5, 'center_y': .85}
+                height: '50dp'
+                color: (0,0,0,1)
+            Label:
                 text:'Usuario'
-                pos_hint: {'center_x': .5, 'center_y': .65}
+                pos_hint: {'center_x': .5, 'center_y': .7}
                 color: (0,0,0,1)
             TextInput:
                 id:user
@@ -55,10 +56,10 @@ Builder.load_string("""
                 height: '32dp'
                 text: 'Ingrese su correo'
                 focus: True
-                pos_hint: {'center_x': .5, 'center_y': .55}
+                pos_hint: {'center_x': .5, 'center_y': .6}
             Label:
                 text:'Contrasena'
-                pos_hint: {'center_x': .5, 'center_y': .47}
+                pos_hint: {'center_x': .5, 'center_y': .5}
                 color: (0,0,0,1)
             TextInput:
                 id:passw
@@ -71,28 +72,26 @@ Builder.load_string("""
                 Button:
                     size_hint_y: None
                     height: '45dp'
+                    size_hint: (0.5, 0.085)
                     pos_hint: {'center_x': .5, 'center_y': .28}
                     text: 'Iniciar Sesion'
                     on_press: root.connect(user.text,passw.text)
                 Button:
                     size_hint_y: None
                     height: '45dp'
+                    size_hint: (0.5, 0.085)
                     pos_hint: {'center_x': .5, 'center_y': .15}
                     text: 'Registrarse'
                     on_press: root.manager.current = 'register'
-
 <ChatScreen>:
     on_enter: root.recvMsg(chat_logs)
     BoxLayout:
         padding: 2
         orientation: 'vertical'
         Button:
-            text:'Desconectar'
-            size_hint: (0.2, 0.05)
-        Button:
             text:'Enviar Archivo'
             on_press: root.manager.current='file'
-            size_hint: (0.2, 0.05)
+            size_hint: (0.4, 0.06)
         ScrollView:
             ChatLabel:
                 id: chat_logs
@@ -108,6 +107,7 @@ Builder.load_string("""
                 text: 'Enviar'
                 size_hint: (0.3, 1)
                 on_press: root.sendMsg(message.text,chat_logs,message)
+
 <RegisterScreen>:
     popup:popup.__self__
     canvas.before:
@@ -116,17 +116,16 @@ Builder.load_string("""
         Rectangle:
             pos: self.pos
             size: self.size
-    FloatLayout:
-        Image:
-            source: '/home/ceul/app/chat-web-master/icono.png'
-            size: self.texture_size
-            height: '55dp'
-            size_hint_y: None
-            pos_hint: {'center_x': .5, 'center_y': .8}
+
     FloatLayout:
         orientation: 'vertical'
         FloatLayout:
             orientation: 'vertical'
+            Label:
+                text: 'Bienvenidos a OMGChat'
+                pos_hint: {'center_x': .5, 'center_y': .78}
+                height: '50dp'
+                color: (0,0,0,1)
             Label:
                 text:'Email'
                 pos_hint: {'center_x': .5, 'center_y': .58}
@@ -150,29 +149,37 @@ Builder.load_string("""
             Button:
                 size_hint_y: None
                 height: '45dp'
+                size_hint: (0.5, 0.085)
                 pos_hint: {'center_x': .5, 'center_y': .26}
                 text: 'Registrate'
-                on_press:root.popup.open()
                 on_press: root.IngresarUsuario(user.text)
-
+                on_press:root.popup.open()
                 on_press: root.manager.current = 'login'
             Button:
                 size_hint_y: None
                 height: '45dp'
+                size_hint: (0.5, 0.085)
                 pos_hint: {'center_x': .5, 'center_y': .15}
                 text: 'Atras'
                 on_press: root.manager.current = 'login'
-
 <FileScreen>:
-    BoxLayout:
+    FloatLayout:
         orientation:'vertical'
-        Button:
-            text: "Enviar"
-            size_hint: (0.2, 0.05)
-            on_release: root.send(filechooser.selection)
-            on_release: root.manager.current='chat'
         FileChooserIconView:
             id: filechooser
+        Button:
+            text: "Enviar"
+            size_hint: (0.3, 0.08)
+            pos_hint: {'center_x': .82, 'center_y': .22}
+            on_release: root.send(filechooser.selection)
+            on_release: root.manager.current='chat'
+        Button:
+            text: "Atras"
+            size_hint: (0.3, 0.08)
+            pos_hint: {'center_x': .82, 'center_y': .1}
+            on_release: root.manager.current='chat'
+
+
 """)
 #on_press: root.manager.current = 'chat'
 # Declare both screens
@@ -212,43 +219,65 @@ sm.add_widget(FileScreen(name='file'))
 class OMGChatApp(App):
     def build(self):
         return sm
+    def on_pause(self):
+        return True
     def connect(self):
         self.clientSocket = socket(AF_INET, SOCK_STREAM)
         self.clientSocket.setsockopt(SOL_SOCKET, SO_REUSEADDR, 1)
         addr = ('192.168.0.26', 3457)
         self.clientSocket.connect(addr)
+        confile = ('', 9002)
+        self.servidor = socket(AF_INET, SOCK_STREAM)
+        self.servidor.setsockopt(SOL_SOCKET, SO_REUSEADDR, 1)
+        self.servidor.bind(confile)
+        self.servidor.listen(50)
 
     def send_msg(self,msg,chat_logs,message):
         if msg=='':
             pass
         else:
-            self.clientSocket.send('%s' % ( msg))
-            chat_logs.text += ('yo: %s\n' % ( msg))
-            message.text = ''
+            if msg.endswith('\n'):
+                msg=msg[:-1]
+                self.clientSocket.send('%s: %s' % ( self.nick,msg))
+                chat_logs.text += ('%s: %s' % ( self.nick,msg))
+                message.text = ''
+            else:
+                self.clientSocket.send('%s: %s' % ( self.nick,msg))
+                chat_logs.text += ('%s: %s' % ( self.nick,msg))
+                message.text = ''
 
     def registerdb(self,user):
-        self.clientSocket.send('Register:\nUser:%s\n' % ( user))
+        if '@'in user:
+            self.clientSocket.send('Register:\nUser:%s\n' % ( user))
+        else:
+            print 'no hay arroba'
 
     def logindb(self,user,password):
-        self.clientSocket.send('Login:\nUser:%s\nPassw:%s\n' % ( user,password))
-        data, server = self.clientSocket.recvfrom(1024)
-        if data=='Login ok':
-            print 'entro'
-            return '1'
+        if '@' in user:
+            self.clientSocket.send('Login:\nUser:%s\nPassw:%s\n' % ( user,password))
+            pos1=user.find('@')
+            self.nick=user[0:pos1]
+            data, server = self.clientSocket.recvfrom(1024)
+            if data=='Login ok':
+                print 'entro'
+                return '1'
+        else:
+            print 'no hay arroba'
     def send_file(self,path):
-        self.clientSocket.send('File:\nName:%s\n' % ( path))
+        head, name = os.path.split(path)
+        self.clientSocket.send('File:\nName:%s\n' % ( name))
         sending_file=threading.Thread(target=self.send_file1, args=(path, ))
         sending_file.start()
 
     def send_file1(self,path):
-        self.clientSocket.send('threading')
+        #self.clientSocket.send('threading')
         CONEXION = ('192.168.0.26', 9001)
         cliente = socket(AF_INET, SOCK_STREAM)
-        self.clientSocket.send('1')
+        #self.clientSocket.send('1')
         cliente.setsockopt(SOL_SOCKET, SO_REUSEADDR, 1)
-        self.clientSocket.send('2')
+        #self.clientSocket.send('2')
         cliente.connect(CONEXION)
-        self.clientSocket.send('conecto')
+        #self.clientSocket.send('conecto')
         with open(path, "rb") as archivo:
             buffer = archivo.read()
         while True:
@@ -258,6 +287,30 @@ class OMGChatApp(App):
             if recibido == "OK":
                 for byte in buffer:
                     cliente.send(byte)
+                break
+
+    def recv_file(self,name,chat_logs):
+        sck, addr = self.servidor.accept()
+        print "Conectado a: {0}:{1}".format(*addr)
+        while True:
+            recibido = sck.recv(1024).strip()
+            if recibido:
+                print "Recibido:", recibido
+            if recibido.isdigit():
+                sck.send("OK")
+                buffer = 0
+                with open("/storage/emulated/0/OMGchat/"+name, "wb") as archivo:
+                    while (buffer <= int(recibido)):
+                        data = sck.recv(1)
+                        if not len(data):
+                            break
+                        archivo.write(data)
+                        buffer += 1
+                    if buffer == int(recibido):
+                        print "Archivo descargado con exito"
+                        chat_logs.text+=("Llego Archivo: "+name+"\n")
+                    else:
+                        print "Ocurrio un error/Archivo incompleto"
                 break
 
     def listener_1(self,chat_logs):
@@ -270,11 +323,26 @@ class OMGChatApp(App):
             print (data)
             if data=='':
                 print ("Reinicie el servicio, se ha caido la conexion")
+            elif (data.startswith("('_')")):
+                chat_logs_o.text += ('              %s\n'% data )
+            elif (data.startswith('File:'))==True:
+                print 'entro'
+                print data
+                pos1=(data.find('Name:',6)+5)
+                pos2=(data.find('\n',pos1))
+                name= data[pos1:pos2]
+                #head, name = os.path.split(path)
+                print name
+                recv=threading.Thread(target=self.recv_file, args=(name,chat_logs_o))
+                recv.start()
             else:
                 print data
-                chat_logs_o.text += ('otro: %s\n' % ( data))
+                chat_logs_o.text += ('%s\n' % ( data))
 
+nuevaruta = r'/storage/emulated/0/OMGchat'
+if not os.path.exists(nuevaruta): os.makedirs(nuevaruta)
 conn=OMGChatApp()
 conn.connect()
 if __name__ == '__main__':
         OMGChatApp().run()
+
