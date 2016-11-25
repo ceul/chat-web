@@ -1,0 +1,86 @@
+# 21/11/2014
+'''Recoded and simplified AudioRecorder from the previous
+version.
+YouTube example-Author-Leon-NetPwn '''
+
+from kivy.app import App
+from kivy.clock import Clock
+from kivy.lang import Builder
+from kivy.uix.boxlayout import BoxLayout
+from jnius import *
+import pyaudio
+import wave
+
+Builder.load_string('''
+<AudioTool>
+
+    orientation: 'vertical'
+
+
+    BoxLayout:
+        Button:
+            id: start_button
+            text: 'Start Recording'
+            on_release: root.startRecording_clock()
+
+
+''')
+
+
+class MyRecorder:
+
+    pass
+
+class AudioApp(App):
+    def build(self):
+        return AudioTool()
+
+class AudioTool(BoxLayout):
+    def __init__(self, **kwargs):
+        super(AudioTool, self).__init__(**kwargs)
+
+        self.start_button = self.ids['start_button']
+
+
+
+    def startRecording_clock(self):
+        CHUNK = 1024
+        FORMAT = pyaudio.paInt16
+        CHANNELS = 2
+        RATE = 44100
+        RECORD_SECONDS = 5
+        WAVE_OUTPUT_FILENAME = "output.wav"
+
+        p = pyaudio.PyAudio()
+
+        stream = p.open(format=FORMAT,
+                        channels=CHANNELS,
+                        rate=RATE,
+                        input=True,
+                        frames_per_buffer=CHUNK)
+
+        print("* Grabando")
+
+        frames = []
+
+        for i in range(0, int(RATE / CHUNK * RECORD_SECONDS)):
+            data = stream.read(CHUNK)
+            frames.append(data)
+
+        print("* done recording")
+
+        stream.stop_stream()
+        stream.close()
+        p.terminate()
+
+        wf = wave.open(WAVE_OUTPUT_FILENAME, 'wb')
+        wf.setnchannels(CHANNELS)
+        wf.setsampwidth(p.get_sample_size(FORMAT))
+        wf.setframerate(RATE)
+        wf.writeframes(b''.join(frames))
+        wf.close()
+
+
+
+if __name__ == '__main__':
+    AudioApp().run()
