@@ -265,6 +265,18 @@ class RegisterScreen(Screen):
 class MyRecorder:
     def __init__(self):
         '''Recorder object To access Android Hardware'''
+        path='/storage/emulated/0/OMGchat/OMGAudios/'
+        date=time.strftime("%d%m%y")
+        i=0
+        audname='AUD-'+date+'-OMG'+str(i)+'.3gp'
+        cpath=path+audname
+        while(True):
+            if os.path.exists(cpath):
+                i=i+1
+                audname='AUD-'+date+'-OMG'+str(i)+'.3gp'
+                cpath=path+audname
+            else:
+                break
         self.MediaRecorder = autoclass('android.media.MediaRecorder')
         self.AudioSource = autoclass('android.media.MediaRecorder$AudioSource')
         self.OutputFormat = autoclass('android.media.MediaRecorder$OutputFormat')
@@ -274,7 +286,7 @@ class MyRecorder:
         self.mRecorder = self.MediaRecorder()
         self.mRecorder.setAudioSource(self.AudioSource.MIC)
         self.mRecorder.setOutputFormat(self.OutputFormat.THREE_GPP)
-        self.mRecorder.setOutputFile('/storage/emulated/0/OMGchat/OMGAudios/MYAUDIO.3gp')
+        self.mRecorder.setOutputFile(cpath)
         self.mRecorder.setAudioEncoder(self.AudioEncoder.AMR_NB)
         self.mRecorder.prepare()
 
@@ -314,6 +326,22 @@ class AudioTool(Screen):
         Clock.unschedule(self.updateDisplay)
         self.r.mRecorder.stop()  # NEW RECORDER VID 6
         self.r.mRecorder.release()  # NEW RECORDER VID 6
+        path='/storage/emulated/0/OMGchat/OMGAudios/'
+        date=time.strftime("%d%m%y")
+        i=0
+        audname='AUD-'+date+'-OMG'+str(i)+'.3gp'
+        cpath=path+audname
+        while(True):
+            if os.path.exists(cpath):
+                i=i+1
+                audname='AUD-'+date+'-OMG'+str(i)+'.3gp'
+                cpath=path+audname
+            else:
+                break
+        i=i-1
+        audname='AUD-'+date+'-OMG'+str(i)+'.3gp'
+        cpath=path+audname
+        conn.send_file(cpath)
 
         Clock.unschedule(self.startRecording)  # NEW stop the recording of audio VID 6
         self.display_label.text = 'Finished Recording!'
@@ -343,9 +371,8 @@ class AudioTool(Screen):
                 # self.start_button.disabled = False # Re enable start
                 # self.stop_button.disabled = True # Re disable stop
                 # Clock.unschedule(self.updateDisplay) #DELETE FOR VID 6
-
                 # self.switch.disabled = False # Re enable the switch
-
+                
             elif self.duration > 0 and len(str(self.duration)) == 1:  # 0-9
                 self.display_label.text = '00' + ':0' + str(self.duration)
                 self.duration -= 1
