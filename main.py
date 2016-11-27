@@ -9,6 +9,11 @@ import threading
 import os
 from plyer import *
 import time
+from kivy.clock import Clock
+from kivy.uix.boxlayout import BoxLayout
+from kivy.uix.textinput import TextInput
+from kivy.uix.switch import Switch
+from jnius import autoclass
 
 Builder.load_string("""
 <ChatLabel@Label>:
@@ -105,6 +110,10 @@ Builder.load_string("""
                 text:'Video'
                 on_press: root.cameraVid()
                 size_hint: (1, 1)
+            Button:
+                text:'Audio'
+                on_press: root.manager.current='audio'
+                size_hint: (1, 1)
         ScrollView:
             ChatLabel:
                 id: chat_logs
@@ -192,7 +201,34 @@ Builder.load_string("""
             pos_hint: {'center_x': .82, 'center_y': .1}
             on_release: root.manager.current='chat'
 
-
+<AudioTool>
+    orientation: 'vertical'
+    Label:
+        id: display_label
+        text: '00:00'
+    BoxLayout:
+        size_hint: 1, .2
+        TextInput:
+            id: user_input
+            text: '5'
+            disabled: duration_switch.active == False #TUT 3 IF SWITCH IS OFF TEXTINPUT IS DISABLED
+            on_text: root.enforce_numeric()
+        Switch:
+            id: duration_switch
+    BoxLayout:
+        Button:
+            id: start_button
+            text: 'Empezar Grabacion'
+            on_release: root.startRecording_clock()
+        Button:
+            id: stop_button
+            text: 'Terminar Grabacion'
+            on_release: root.stopRecording()
+            disabled: True
+        Button:
+            id: back_button
+            text: 'Atras'
+            on_release: root.manager.current='chat'
 """)
 #on_press: root.manager.current = 'chat'
 # Declare both screens
@@ -226,12 +262,117 @@ class RegisterScreen(Screen):
     def IngresarUsuario(self,user):
         conn.registerdb(user)
 
+class MyRecorder:
+    def __init__(self):
+        '''Recorder object To access Android Hardware'''
+        self.MediaRecorder = autoclass('android.media.MediaRecorder')
+        self.AudioSource = autoclass('android.media.MediaRecorder$AudioSource')
+        self.OutputFormat = autoclass('android.media.MediaRecorder$OutputFormat')
+        self.AudioEncoder = autoclass('android.media.MediaRecorder$AudioEncoder')
+
+        # create out recorder
+        self.mRecorder = self.MediaRecorder()
+        self.mRecorder.setAudioSource(self.AudioSource.MIC)
+        self.mRecorder.setOutputFormat(self.OutputFormat.THREE_GPP)
+        self.mRecorder.setOutputFile('/storage/emulated/0/OMGchat/OMGAudios/MYAUDIO.3gp')
+        self.mRecorder.setAudioEncoder(self.AudioEncoder.AMR_NB)
+        self.mRecorder.prepare()
+
+class AudioTool(Screen):
+    def __init__(self, **kwargs):
+        super(AudioTool, self).__init__(**kwargs)
+
+        self.start_button = self.ids['start_button']
+        self.stop_button = self.ids['stop_button']
+        self.display_label = self.ids['display_label']
+        self.switch = self.ids['duration_switch']  # Tutorial 3
+        self.user_input = self.ids['user_input']
+
+    def enforce_numeric(self):
+        '''Make sure the textinput only accepts numbers'''
+        if self.user_input.text.isdigit() == False:
+            digit_list = [num for num in self.user_input.text if num.isdigit()]
+            self.user_input.text = "".join(digit_list)
+
+    def startRecording_clock(self):
+
+        self.mins = 0  # Reset the minutes
+        self.zero = 1  # Reset if the function gets called more than once
+        self.duration = int(self.user_input.text)  # Take the input from the user and convert to a number
+        Clock.schedule_interval(self.updateDisplay, 1)
+        self.start_button.disabled = True  # Prevents the user from clicking start again which may crash the program
+        self.stop_button.disabled = False
+        self.switch.disabled = True  # TUT Switch disabled when start is pressed
+        Clock.schedule_once(self.startRecording)  ## NEW start the recording
+
+    def startRecording(self, dt):  # NEW start the recorder
+        self.r = MyRecorder()
+        self.r.mRecorder.start()
+
+    def stopRecording(self):
+
+        Clock.unschedule(self.updateDisplay)
+        self.r.mRecorder.stop()  # NEW RECORDER VID 6
+        self.r.mRecorder.release()  # NEW RECORDER VID 6
+
+        Clock.unschedule(self.startRecording)  # NEW stop the recording of audio VID 6
+        self.display_label.text = 'Finished Recording!'
+        self.start_button.disabled = False
+        self.stop_button.disabled = True  # TUT 3
+        self.switch.disabled = False  # TUT 3 re enable the switch
+
+    def updateDisplay(self, dt):
+        if self.switch.active == False:
+            if self.zero < 60 and len(str(self.zero)) == 1:
+                self.display_label.text = '0' + str(self.mins) + ':0' + str(self.zero)
+                self.zero += 1
+
+            elif self.zero < 60 and len(str(self.zero)) == 2:
+                self.display_label.text = '0' + str(self.mins) + ':' + str(self.zero)
+                self.zero += 1
+
+            elif self.zero == 60:
+                self.mins += 1
+                self.display_label.text = '0' + str(self.mins) + ':00'
+                self.zero = 1
+
+        elif self.switch.active == True:
+            if self.duration == 0:  # 0
+                self.display_label.text = 'Recording Finished!'
+                self.stopRecording()  # NEW VID 6 / THIS ONE LINE SHOULD TAKE CARE OF THE RECORDING NOT STOPPING.
+                # self.start_button.disabled = False # Re enable start
+                # self.stop_button.disabled = True # Re disable stop
+                # Clock.unschedule(self.updateDisplay) #DELETE FOR VID 6
+
+                # self.switch.disabled = False # Re enable the switch
+
+            elif self.duration > 0 and len(str(self.duration)) == 1:  # 0-9
+                self.display_label.text = '00' + ':0' + str(self.duration)
+                self.duration -= 1
+
+            elif self.duration > 0 and self.duration < 60 and len(str(self.duration)) == 2:  # 0-59
+                self.display_label.text = '00' + ':' + str(self.duration)
+                self.duration -= 1
+
+            elif self.duration >= 60 and len(str(self.duration % 60)) == 1:  # EG 01:07
+                self.mins = self.duration / 60
+                self.display_label.text = '0' + str(self.mins) + ':0' + str(self.duration % 60)
+                self.duration -= 1
+
+            elif self.duration >= 60 and len(str(self.duration % 60)) == 2:  # EG 01:17
+                self.mins = self.duration / 60
+                self.display_label.text = '0' + str(self.mins) + ':' + str(self.duration % 60)
+                self.duration -= 1
+
+
 # Create the screen manager
 sm = ScreenManager()
 sm.add_widget(LoginScreen(name='login'))
 sm.add_widget(ChatScreen(name='chat'))
 sm.add_widget(RegisterScreen(name='register'))
 sm.add_widget(FileScreen(name='file'))
+sm.add_widget(AudioTool(name='audio'))
+
 
 class OMGChatApp(App):
     def build(self):
@@ -252,8 +393,16 @@ class OMGChatApp(App):
     def  camPic(self):
         path='/storage/emulated/0/OMGchat/OMGImages/'
         date=time.strftime("%d%m%y")
-        imgname='IMG-'+date+'-OMG.jpg'
+        i=0
+        imgname='IMG-'+date+'-OMG'+str(i)+'.jpg'
         cpath=path+imgname
+        while(True):
+            if os.path.exists(cpath):
+                i=i+1
+                imgname='IMG-'+date+'-OMG'+str(i)+'.jpg'
+                cpath=path+imgname
+            else:
+                break
         camera.take_picture(cpath,self.done)
 
     def done(self,path):
@@ -263,8 +412,16 @@ class OMGChatApp(App):
     def  camVid(self):
         path='/storage/emulated/0/OMGchat/OMGVideos/'
         date=time.strftime("%d%m%y")
-        vidname='VID-'+date+'-OMG.mp4'
+        i=0
+        vidname='VID-'+date+'-OMG'+str(i)+'.mp4'
         cpath=path+vidname
+        while(True):
+            if os.path.exists(cpath):
+                i=i+1
+                vidname='VID-'+date+'-OMG'+str(i)+'.mp4'
+                cpath=path+vidname
+            else:
+                break
         camera.take_video(cpath,self.done1)
 
     def done1(self,path):
@@ -388,6 +545,8 @@ nuevaruta1 = r'/storage/emulated/0/OMGchat/OMGImages'
 if not os.path.exists(nuevaruta1): os.makedirs(nuevaruta1)
 nuevaruta2 = r'/storage/emulated/0/OMGchat/OMGVideos'
 if not os.path.exists(nuevaruta2): os.makedirs(nuevaruta2)
+nuevaruta3 = r'/storage/emulated/0/OMGchat/OMGAudios'
+if not os.path.exists(nuevaruta3): os.makedirs(nuevaruta3)
 
 conn=OMGChatApp()
 conn.connect()
