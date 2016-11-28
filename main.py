@@ -32,7 +32,7 @@ Builder.load_string("""
 <ScrollView>:
     canvas.before:
         Color:
-            rgb: (0.5, 0.5, 0.5, 1.0)
+            rgb: (0.16, 0.32, 0.75)
         Rectangle:
             pos: self.pos
             size: self.size
@@ -40,22 +40,24 @@ Builder.load_string("""
 <LoginScreen>:
     canvas.before:
         Color:
-            rgb: (0.5, 0.5, 0.5, 1.0)
+            rgb: (0.16, 0.32, 0.75)
         Rectangle:
             pos: self.pos
             size: self.size
+    Image:
+        source:'/storage/emulated/0/OMG/icon.png'
+        size: self.texture_size
+        height:'55dp'
+        size_hint_y:None
+        pos_hint: {'center_x': .5, 'center_y': .85}
     FloatLayout:
         orientation: 'vertical'
         FloatLayout:
             orientation: 'vertical'
             Label:
-                text:'Bienvenido a OMGchat'
-                pos_hint: {'center_x': .5, 'center_y': .9}
-                color: (0,0,0,1)
-            Label:
                 text:'Usuario'
                 pos_hint: {'center_x': .5, 'center_y': .7}
-                color: (0,0,0,1)
+                color: (1,1,1,1)
             TextInput:
                 id:user
                 size_hint_y: None
@@ -66,7 +68,7 @@ Builder.load_string("""
             Label:
                 text:'Contrasena'
                 pos_hint: {'center_x': .5, 'center_y': .5}
-                color: (0,0,0,1)
+                color: (1,1,1,1)
             TextInput:
                 id:passw
                 size_hint_y: None
@@ -77,6 +79,7 @@ Builder.load_string("""
             FloatLayout:
                 Button:
                     size_hint_y: None
+                    background_color:(1,1,1,0.3)
                     height: '45dp'
                     size_hint: (0.5, 0.085)
                     pos_hint: {'center_x': .5, 'center_y': .28}
@@ -84,11 +87,13 @@ Builder.load_string("""
                     on_press: root.connect(user.text,passw.text)
                 Button:
                     size_hint_y: None
+                    background_color:(1,1,1,0.3)
                     height: '45dp'
                     size_hint: (0.5, 0.085)
-                    pos_hint: {'center_x': .5, 'center_y': .15}
+                    pos_hint: {'center_x': .5, 'center_y': .16}
                     text: 'Registrarse'
                     on_press: root.manager.current = 'register'
+                
 <ChatScreen>:
     on_enter: root.recvMsg(chat_logs)
     BoxLayout:
@@ -102,22 +107,28 @@ Builder.load_string("""
                 text:'Enviar Archivo'
                 on_press: root.manager.current='file'
                 size_hint: (1, 1)
+                background_color:(1,1,1,0.3)
             Button:
                 text:'Foto'
                 on_press: root.cameraPic()
                 size_hint: (1, 1)
+                background_color:(1,1,1,0.3)
+                
             Button:
                 text:'Video'
                 on_press: root.cameraVid()
                 size_hint: (1, 1)
+                background_color:(1,1,1,0.3)
+
             Button:
                 text:'Audio'
                 on_press: root.manager.current='audio'
                 size_hint: (1, 1)
+                background_color:(1,1,1,0.3)
         ScrollView:
             ChatLabel:
                 id: chat_logs
-                color: (0,0,0,1)
+                color: (1,1,1,1)
         BoxLayout:
             height: 90
             orientation: 'horizontal'
@@ -129,25 +140,26 @@ Builder.load_string("""
                 text: 'Enviar'
                 size_hint: (0.3, 1)
                 on_press: root.sendMsg(message.text,chat_logs,message)
+                background_color:(1,1,1,0.3)
 
 <RegisterScreen>:
     popup:popup.__self__
     canvas.before:
         Color:
-            rgb: (0.5, 0.5, 0.5, 1.0)
+            rgb: (0.16, 0.32, 0.75)
         Rectangle:
             pos: self.pos
             size: self.size
-
+    Image:
+        source:'/storage/emulated/0/OMG/icon.png'
+        size: self.texture_size
+        height:'55dp'
+        size_hint_y:None
+        pos_hint: {'center_x': .5, 'center_y': .85}
     FloatLayout:
         orientation: 'vertical'
         FloatLayout:
             orientation: 'vertical'
-            Label:
-                text: 'Bienvenidos a OMGChat'
-                pos_hint: {'center_x': .5, 'center_y': .78}
-                height: '50dp'
-                color: (0,0,0,1)
             Label:
                 text:'Email'
                 pos_hint: {'center_x': .5, 'center_y': .58}
@@ -172,6 +184,7 @@ Builder.load_string("""
                 size_hint_y: None
                 height: '45dp'
                 size_hint: (0.5, 0.085)
+                background_color:(1,1,1,0.3)
                 pos_hint: {'center_x': .5, 'center_y': .26}
                 text: 'Registrate'
                 on_press: root.IngresarUsuario(user.text)
@@ -181,6 +194,7 @@ Builder.load_string("""
                 size_hint_y: None
                 height: '45dp'
                 size_hint: (0.5, 0.085)
+                background_color:(1,1,1,0.3)
                 pos_hint: {'center_x': .5, 'center_y': .15}
                 text: 'Atras'
                 on_press: root.manager.current = 'login'
@@ -206,28 +220,46 @@ Builder.load_string("""
     Label:
         id: display_label
         text: '00:00'
-    BoxLayout:
-        size_hint: 1, .2
+        pos_hint: {'center_x': .5, 'center_y': .6}
+    FloatLayout:
         TextInput:
             id: user_input
             text: '5'
+            size_hint_y: None
+            height: '32dp'
+            focus: True
+            pos_hint: {'center_x': .5, 'center_y': .46}
             disabled: duration_switch.active == False #TUT 3 IF SWITCH IS OFF TEXTINPUT IS DISABLED
             on_text: root.enforce_numeric()
         Switch:
             id: duration_switch
-    BoxLayout:
+            pos_hint: {'center_x': .5, 'center_y': .35}
+    FloatLayout:
+        orientation:'horizontal'
         Button:
+            size_hint_y: None
+            height: '45dp'
+            size_hint: (0.5, 0.085)
             id: start_button
             text: 'Empezar Grabacion'
             on_release: root.startRecording_clock()
+            pos_hint: {'center_x': .25, 'center_y': .1}
         Button:
+            size_hint_y: None
+            height: '45dp'
+            size_hint: (0.5, 0.085)
             id: stop_button
             text: 'Terminar Grabacion'
+            pos_hint: {'center_x': .5, 'center_y': .23}
             on_release: root.stopRecording()
             disabled: True
         Button:
+            size_hint_y: None
+            height: '45dp'
+            size_hint: (0.5, 0.085)
             id: back_button
             text: 'Atras'
+            pos_hint: {'center_x': .75, 'center_y': .1}
             on_release: root.manager.current='chat'
 """)
 #on_press: root.manager.current = 'chat'
@@ -409,7 +441,7 @@ class OMGChatApp(App):
     def connect(self):
         self.clientSocket = socket(AF_INET, SOCK_STREAM)
         self.clientSocket.setsockopt(SOL_SOCKET, SO_REUSEADDR, 1)
-        addr = ('192.168.0.28', 3457)
+        addr = ('192.168.0.19', 3457)
         self.clientSocket.connect(addr)
         confile = ('', 9002)
         self.servidor = socket(AF_INET, SOCK_STREAM)
@@ -457,17 +489,18 @@ class OMGChatApp(App):
 
 
     def send_msg(self,msg,chat_logs,message):
+        hour =time.strftime("%H:%M:%S")
         if msg=='':
             pass
         else:
             if msg.endswith('\n'):
                 msg=msg[:-1]
                 self.clientSocket.send('%s: %s' % ( self.nick,msg))
-                chat_logs.text += ('%s: %s' % ( self.nick,msg))
+                chat_logs.text += ('\n-%s: %s        %s' % ( self.nick,msg,hour))
                 message.text = ''
             else:
                 self.clientSocket.send('%s: %s' % ( self.nick,msg))
-                chat_logs.text += ('%s: %s' % ( self.nick,msg))
+                chat_logs.text += ('\n-%s: %s        %s' % ( self.nick,msg,hour))
                 message.text = ''
 
     def registerdb(self,user):
@@ -493,10 +526,11 @@ class OMGChatApp(App):
         self.chat_log.text+=('Enviando archivo: %s \n'% name)
         sending_file=threading.Thread(target=self.send_file1, args=(path,name))
         sending_file.start()
-
+    def on_key_up(self):
+        Window.softinput_mod='pan'
     def send_file1(self,path,name):
         #self.clientSocket.send('threading')
-        CONEXION = ('192.168.0.28', 9001)
+        CONEXION = ('192.168.0.19', 9001)
         cliente = socket(AF_INET, SOCK_STREAM)
         #self.clientSocket.send('1')
         cliente.setsockopt(SOL_SOCKET, SO_REUSEADDR, 1)
@@ -548,10 +582,12 @@ class OMGChatApp(App):
         while True:
             data, server = self.clientSocket.recvfrom(1024)
             print (data)
+            chat_logs_o.text+='-'
             if data=='':
                 print ("Reinicie el servicio, se ha caido la conexion")
             elif (data.startswith("('_')")):
-                chat_logs_o.text += ('              %s\n'% data )
+                print 'llego'
+                chat_logs_o.text += ('              ...r\n')
             elif (data.startswith('File:'))==True:
                 print 'entro'
                 print data
@@ -563,8 +599,10 @@ class OMGChatApp(App):
                 recv=threading.Thread(target=self.recv_file, args=(name,chat_logs_o))
                 recv.start()
             else:
-                print data
-                chat_logs_o.text += ('%s\n' % ( data))
+                vibrator.cancel()
+                vibrator.vibrate(time=1)
+                hour =time.strftime("%H:%M:%S")
+                chat_logs_o.text += ('%s       %s\n\n' % ( data,hour))
 
 nuevaruta = r'/storage/emulated/0/OMGchat'
 if not os.path.exists(nuevaruta): os.makedirs(nuevaruta)
@@ -579,4 +617,3 @@ conn=OMGChatApp()
 conn.connect()
 if __name__ == '__main__':
         OMGChatApp().run()
-
